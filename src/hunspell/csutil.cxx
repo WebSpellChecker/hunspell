@@ -108,9 +108,26 @@ struct unicode_info2 {
   unsigned short clower;
 };
 
-static struct unicode_info2* utf_tbl = NULL;
-static int utf_tbl_count =
-    0;  // utf_tbl can be used by multiple Hunspell instances
+auto initialize_real_utf_tbl()
+{
+    auto utf_tbl = std::make_unique< unicode_info2[] >(CONTSIZE);
+
+    for (size_t j = 0; j < CONTSIZE; ++j) {
+        utf_tbl[j].cletter = 0;
+        utf_tbl[j].clower = (unsigned short)j;
+        utf_tbl[j].cupper = (unsigned short)j;
+    }
+
+    for (size_t j = 0; j < UTF_LST_LEN; ++j) {
+        utf_tbl[utf_lst[j].c].cletter = 1;
+        utf_tbl[utf_lst[j].c].clower = utf_lst[j].clower;
+        utf_tbl[utf_lst[j].c].cupper = utf_lst[j].cupper;
+    }
+
+    return utf_tbl;
+}
+
+static const auto utf_tbl = initialize_real_utf_tbl();
 
 void myopen(std::ifstream& stream, const char* path, std::ios_base::openmode mode)
 {
@@ -2422,33 +2439,11 @@ int get_lang_num(const std::string& lang) {
 
 #ifndef OPENOFFICEORG
 #ifndef MOZILLA_CLIENT
-void initialize_utf_tbl() {
-  utf_tbl_count++;
-  if (utf_tbl)
-    return;
-  utf_tbl = new unicode_info2[CONTSIZE];
-  for (size_t j = 0; j < CONTSIZE; ++j) {
-    utf_tbl[j].cletter = 0;
-    utf_tbl[j].clower = (unsigned short)j;
-    utf_tbl[j].cupper = (unsigned short)j;
-  }
-  for (size_t j = 0; j < UTF_LST_LEN; ++j) {
-    utf_tbl[utf_lst[j].c].cletter = 1;
-    utf_tbl[utf_lst[j].c].clower = utf_lst[j].clower;
-    utf_tbl[utf_lst[j].c].cupper = utf_lst[j].cupper;
-  }
-}
+void initialize_utf_tbl() {}
 #endif
 #endif
 
-void free_utf_tbl() {
-  if (utf_tbl_count > 0)
-    utf_tbl_count--;
-  if (utf_tbl && (utf_tbl_count == 0)) {
-    delete[] utf_tbl;
-    utf_tbl = NULL;
-  }
-}
+void free_utf_tbl() {}
 
 unsigned short unicodetoupper(unsigned short c, int langnum) {
   // In Azeri and Turkish, I and i dictinct letters:
