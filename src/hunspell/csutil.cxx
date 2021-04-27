@@ -75,6 +75,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <sstream>
+#include <memory>
 
 #include "csutil.hxx"
 #include "atypes.hxx"
