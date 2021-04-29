@@ -1857,7 +1857,7 @@ std::vector<std::string> HunspellImpl::spellml(const std::string& in_word) {
         }
       }
     }
-  } else if (check_xml_par(q, "type=", "add")) {
+  } /* else if (check_xml_par(q, "type=", "add")) {
     std::string cw = get_xml_par(strchr(q2, '>'));
     if (cw.empty())
       return slst;
@@ -1872,7 +1872,7 @@ std::vector<std::string> HunspellImpl::spellml(const std::string& in_word) {
     } else {
         add(cw);
     }
-  }
+  } */
   return slst;
 }
 
