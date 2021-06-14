@@ -128,7 +128,6 @@ AffixMgr::AffixMgr(const char* affpath,
   cpdwordmax = -1;        // default: unlimited wordcount in compound words
   cpdmin = -1;            // undefined
   cpdmaxsyllable = 0;     // default: unlimited syllablecount in compound words
-  pfxappnd = NULL;  // previous prefix for counting syllables of the prefix BUG
   sfxappnd = NULL;  // previous suffix for counting syllables of the suffix BUG
   sfxextra = 0;     // modifier for syllable count of sfxappnd BUG
   checknum = 0;               // checking numbers, and word with numbers
@@ -1081,7 +1080,6 @@ struct hentry* AffixMgr::prefix_check(const char* word,
   struct hentry* rv = NULL;
 
   pfx = NULL;
-  pfxappnd = NULL;
   sfxappnd = NULL;
   sfxextra = 0;
 
