@@ -146,7 +146,6 @@ class AffixMgr {
   const char* sfxappnd;  // BUG: not stateless
   int sfxextra;          // BUG: not stateless
   FLAG sfxflag;          // BUG: not stateless
-  char* derived;         // BUG: not stateless
   SfxEntry* sfx;         // BUG: not stateless
   PfxEntry* pfx;         // BUG: not stateless
   int checknum;
