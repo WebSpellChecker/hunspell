@@ -827,6 +827,10 @@ struct hentry* HunspellImpl::checkword(const std::string& w, int* info, std::str
 
   // check with affixes
   if (!he && pAMgr) {
+
+    auto& mutex = pAMgr->get_mutex();
+    std::scoped_lock lock(mutex);
+
     // try stripping off affixes */
     he = pAMgr->affix_check(word, len, 0);
 
@@ -1905,6 +1909,8 @@ std::vector<std::string> HunspellImpl::suffix_suggest(const std::string& root_wo
     he = m_HMgrs[i]->lookup(word);
   }
   if (he) {
+    auto& mutex = pAMgr->get_mutex();
+    std::scoped_lock lock(mutex);
     slst = pAMgr->get_suffix_words(he->astr, he->alen, root_word.c_str());
   }
   return slst;

@@ -3533,6 +3533,10 @@ int AffixMgr::get_fullstrip() const {
   return fullstrip;
 }
 
+std::mutex& AffixMgr::get_mutex() {
+    return mutex;
+}
+
 FLAG AffixMgr::get_keepcase() const {
   return keepcase;
 }
