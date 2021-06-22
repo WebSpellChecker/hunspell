@@ -133,7 +133,7 @@ private:
   int langnum;
   int utf8;
   int complexprefixes;
-  std::vector<std::string> wordbreak;
+  std::vector<std::string> wordbreakstorage;
 
 private:
   std::vector<std::string> analyze_internal(const std::string& word);
@@ -191,7 +191,7 @@ HunspellImpl::HunspellImpl(const char* affpath, const char* dpath, const char* k
   if (!utf8)
     csconv = get_current_cs(encoding);
   complexprefixes = pAMgr->get_complexprefixes();
-  wordbreak = pAMgr->get_breaktable();
+  wordbreakstorage = pAMgr->get_breaktable();
 
   /* and finally set up the suggestion manager */
   pSMgr = new SuggestMgr(try_string, MAXSUGGESTION, pAMgr);
@@ -672,34 +672,34 @@ bool HunspellImpl::spell_internal(const std::string& word, int* info, std::strin
   }
 
   // recursive breaking at break points
-  if (!wordbreak.empty() && !(*info & SPELL_FORBIDDEN)) {
+  if (!wordbreakstorage.empty() && !(*info & SPELL_FORBIDDEN)) {
 
     int nbr = 0;
     wl = scw.size();
 
     // calculate break points for recursion limit
-    for (size_t j = 0; j < wordbreak.size(); ++j) {
+    for (const auto& wordbreak : wordbreakstorage) {
       size_t pos = 0;
-      while ((pos = scw.find(wordbreak[j], pos)) != std::string::npos) {
+      while ((pos = scw.find(wordbreak, pos)) != std::string::npos) {
         ++nbr;
-        pos += wordbreak[j].size();
+        pos += wordbreak.size();
       }
     }
     if (nbr >= 10)
       return false;
 
     // check boundary patterns (^begin and end$)
-    for (size_t j = 0; j < wordbreak.size(); ++j) {
-      size_t plen = wordbreak[j].size();
-      if (plen == 1 || plen > wl)
+    for (const auto& wordbreak : wordbreakstorage) {
+      const auto plen = wordbreak.size();
+      if (plen <= 1 || plen > wl)
         continue;
 
-      if (wordbreak[j][0] == '^' &&
-          scw.compare(0, plen - 1, wordbreak[j], 1, plen -1) == 0 && spell(scw.substr(plen - 1)))
+      if (wordbreak[0] == '^' &&
+          scw.compare(0, plen - 1, wordbreak, 1, plen -1) == 0 && spell(scw.substr(plen - 1)))
         return true;
 
-      if (wordbreak[j][plen - 1] == '$' &&
-          scw.compare(wl - plen + 1, plen - 1, wordbreak[j], 0, plen - 1) == 0) {
+      if (wordbreak[plen - 1] == '$' &&
+          scw.compare(wl - plen + 1, plen - 1, wordbreak, 0, plen - 1) == 0) {
         std::string suffix(scw.substr(wl - plen + 1));
         scw.resize(wl - plen + 1);
         if (spell(scw))
@@ -709,11 +709,11 @@ bool HunspellImpl::spell_internal(const std::string& word, int* info, std::strin
     }
 
     // other patterns
-    for (size_t j = 0; j < wordbreak.size(); ++j) {
-      size_t plen = wordbreak[j].size();
-      size_t found = scw.find(wordbreak[j]);
+    for (const auto& wordbreak : wordbreakstorage) {
+      size_t plen = wordbreak.size();
+      size_t found = scw.find(wordbreak);
       if ((found > 0) && (found < wl - plen)) {
-        size_t found2 = scw.find(wordbreak[j], found + 1);
+        size_t found2 = scw.find(wordbreak, found + 1);
         // try to break at the second occurance
         // to recognize dictionary words with wordbreak
         if (found2 > 0 && (found2 < wl - plen))
@@ -728,7 +728,7 @@ bool HunspellImpl::spell_internal(const std::string& word, int* info, std::strin
         scw.append(suffix);
 
         // LANG_hu: spec. dash rule
-        if (langnum == LANG_hu && wordbreak[j] == "-") {
+        if (langnum == LANG_hu && wordbreak == "-") {
           suffix = scw.substr(found + 1);
           scw.resize(found + 1);
           if (spell(scw))
@@ -740,9 +740,9 @@ bool HunspellImpl::spell_internal(const std::string& word, int* info, std::strin
     }
 
     // other patterns (break at first break point)
-    for (size_t j = 0; j < wordbreak.size(); ++j) {
-      size_t plen = wordbreak[j].size();
-      size_t found = scw.find(wordbreak[j]);
+    for (const auto& wordbreak : wordbreakstorage) {
+      size_t plen = wordbreak.size();
+      size_t found = scw.find(wordbreak);
       if ((found > 0) && (found < wl - plen)) {
         if (!spell(scw.substr(found + plen)))
           continue;
@@ -754,7 +754,7 @@ bool HunspellImpl::spell_internal(const std::string& word, int* info, std::strin
         scw.append(suffix);
 
         // LANG_hu: spec. dash rule
-        if (langnum == LANG_hu && wordbreak[j] == "-") {
+        if (langnum == LANG_hu && wordbreak == "-") {
           suffix = scw.substr(found + 1);
           scw.resize(found + 1);
           if (spell(scw))
