@@ -939,6 +939,9 @@ int HashMgr::load_config(const char* affpath, const char* key) {
     else
       csconv = get_current_cs(enc);
 
+    if (csconv == NULL)
+      csconv = get_current_cs("ISO8859-1");
+
     return 0;
   }
 
