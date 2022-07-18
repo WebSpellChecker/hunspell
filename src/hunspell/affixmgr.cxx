@@ -243,6 +243,24 @@ void AffixMgr::finishFileMgr(FileMgr* afflst) {
 // read in aff file and build up prefix and suffix entry objects
 int AffixMgr::parse_file(const char* affpath, const char* key) {
 
+  if (std::string(affpath) == "")
+  {
+    encoding = SPELL_ENCODING;
+
+    if (encoding == "UTF-8") {
+      utf8 = 1;
+#ifndef OPENOFFICEORG
+#ifndef MOZILLA_CLIENT
+      initialize_utf_tbl();
+#endif
+#endif
+    }
+
+    finish_affix_read();
+
+    return 0;
+  }
+
   // checking flag duplication
   char dupflags[CONTSIZE];
   char dupflags_ini = 1;
@@ -303,7 +321,7 @@ int AffixMgr::parse_file(const char* affpath, const char* key) {
         utf8 = 1;
 #ifndef OPENOFFICEORG
 #ifndef MOZILLA_CLIENT
-        initialize_utf_tbl();
+         initialize_utf_tbl();
 #endif
 #endif
       }
@@ -724,29 +742,34 @@ int AffixMgr::parse_file(const char* affpath, const char* key) {
   // initialize
   // the nextne and nexteq pointers that relate them
 
-  process_pfx_order();
-  process_sfx_order();
+  finish_affix_read();
+  return 0;
+}
 
-  /* get encoding for CHECKCOMPOUNDCASE */
-  if (!utf8) {
-    csconv = get_current_cs(get_encoding());
-    for (int i = 0; i <= 255; i++) {
-      if ((csconv[i].cupper != csconv[i].clower) &&
-          (wordchars.find((char)i) == std::string::npos)) {
-        wordchars.push_back((char)i);
-      }
+void AffixMgr::finish_affix_read()
+{
+    process_pfx_order();
+    process_sfx_order();
+
+    /* get encoding for CHECKCOMPOUNDCASE */
+    if (!utf8) {
+        csconv = get_current_cs(get_encoding());
+        for (int i = 0; i <= 255; i++) {
+            if ((csconv[i].cupper != csconv[i].clower) &&
+                (wordchars.find((char)i) == std::string::npos)) {
+                wordchars.push_back((char)i);
+            }
+        }
+
     }
 
-  }
-
-  // default BREAK definition
-  if (!parsedbreaktable) {
-    breaktable.push_back("-");
-    breaktable.push_back("^-");
-    breaktable.push_back("-$");
-    parsedbreaktable = true;
-  }
-  return 0;
+    // default BREAK definition
+    if (!parsedbreaktable) {
+        breaktable.push_back("-");
+        breaktable.push_back("^-");
+        breaktable.push_back("-$");
+        parsedbreaktable = true;
+    }
 }
 
 // we want to be able to quickly access prefix information

@@ -335,6 +335,7 @@ class AffixMgr {
   std::mutex& get_mutex();
 
  private:
+  void finish_affix_read();
   int parse_file(const char* affpath, const char* key);
   bool parse_flag(const std::string& line, unsigned short* out, FileMgr* af);
   bool parse_num(const std::string& line, int* out, FileMgr* af);
