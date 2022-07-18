@@ -94,7 +94,7 @@
 #define HUHINITCAP 4
 
 // default encoding and keystring
-#define SPELL_ENCODING "ISO8859-1"
+#define SPELL_ENCODING "UTF-8"
 #define SPELL_KEYSTRING "qwertyuiop|asdfghjkl|zxcvbnm"
 
 // default morphological fields
