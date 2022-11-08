@@ -2,7 +2,7 @@
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Copyright (C) 2002-2017 Németh László
+ * Copyright (C) 2002-2022 Németh László
  *
  * The contents of this file are subject to the Mozilla Public License Version
  * 1.1 (the "License"); you may not use this file except in compliance with
@@ -579,9 +579,9 @@ const char* basename(const char* s, char c) {
 }
 
 #ifdef HAVE_CURSES_H
-char* scanline(char* message) {
+char* scanline(const char* message) {
   char input[INPUTLEN];
-  printw(message);
+  printw("%s", message);
   echo();
   getnstr(input, INPUTLEN);
   noecho();
@@ -799,7 +799,8 @@ nextline:
         mystrrep(token, ENTITY_APOS, "'");
         switch (filter_mode) {
           case BADWORD: {
-            if (!check(pMS, &d, token, NULL, NULL)) {
+            int info;
+            if (!check(pMS, &d, token, &info, NULL)) {
               bad = 1;
               if (!printgood)
                 fprintf(stdout, "%s%s\n", filename_prefix.c_str(), token.c_str());
@@ -811,7 +812,8 @@ nextline:
           }
 
           case WORDFILTER: {
-            if (!check(pMS, &d, parser->get_word(token), NULL, NULL)) {
+            int info;
+            if (!check(pMS, &d, parser->get_word(token), &info, NULL)) {
               if (!printgood)
                 fprintf(stdout, "%s\n", buf);
             } else {
@@ -822,7 +824,8 @@ nextline:
           }
 
           case BADLINE: {
-            if (!check(pMS, &d, parser->get_word(token), NULL, NULL)) {
+            int info;
+            if (!check(pMS, &d, parser->get_word(token), &info, NULL)) {
               bad = 1;
             }
             continue;
@@ -833,7 +836,8 @@ nextline:
           case AUTO2:
           case AUTO3: {
             FILE* f = (filter_mode == AUTO) ? stderr : stdout;
-            if (!check(pMS, &d, parser->get_word(token), NULL, NULL)) {
+            int info;
+            if (!check(pMS, &d, parser->get_word(token), &info, NULL)) {
               bad = 1;
               std::vector<std::string> wlst =
                   pMS[d]->suggest(chenc(parser->get_word(token), io_enc, dic_enc[d]));
@@ -1182,7 +1186,7 @@ void dialogscreen(TextParser* parser,
     if ((wlst.size() > 10) && (i < 10)) {
       printw(" 0%zu: %s\n", i, chenc(wlst[i], io_enc, ui_enc).c_str());
     } else {
-      printw(" %u: %s\n", i, chenc(wlst[i], io_enc, ui_enc).c_str());
+      printw(" %zu: %s\n", i, chenc(wlst[i], io_enc, ui_enc).c_str());
     }
   }
 
@@ -2066,9 +2070,6 @@ int main(int argc, char** argv) {
         gettext(
             "AVAILABLE DICTIONARIES (path is not mandatory for -d option):\n"));
     search(path, NULL, NULL);
-    if (-1 == arg_files) {
-      exit(0);
-    }
   }
 
   if (!privdicname)
@@ -2114,6 +2115,10 @@ int main(int argc, char** argv) {
                             "dictionary named \"%s\".\n"),
             dicname);
     exit(1);
+  }
+
+  if (showpath && -1 == arg_files) {
+      exit(0);
   }
 
   /* open the private dictionaries */
