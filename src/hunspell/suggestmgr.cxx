@@ -1123,6 +1123,8 @@ void SuggestMgr::ngsuggest(std::vector<std::string>& wlst,
   // set character based ngram suggestion for words with non-BMP Unicode
   // characters
   if (n == -1) {
+      throw std::logic_error{ "Couldn't find suggestion with ngsuggest." };
+
     utf8 = 0;  // XXX not state-free
     n = nc;
     nonbmp = 1;
