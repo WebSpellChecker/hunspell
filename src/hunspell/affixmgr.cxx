@@ -274,11 +274,6 @@ int AffixMgr::parse_file(const char* affpath, const char* key) {
 
     if (encoding == "UTF-8") {
       utf8 = 1;
-#ifndef OPENOFFICEORG
-#ifndef MOZILLA_CLIENT
-      initialize_utf_tbl();
-#endif
-#endif
     }
 
     finish_affix_read();
@@ -344,11 +339,6 @@ int AffixMgr::parse_file(const char* affpath, const char* key) {
       }
       if (encoding == "UTF-8") {
         utf8 = 1;
-#ifndef OPENOFFICEORG
-#ifndef MOZILLA_CLIENT
-         initialize_utf_tbl();
-#endif
-#endif
       }
     }
 

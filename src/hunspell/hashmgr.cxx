@@ -944,11 +944,6 @@ int HashMgr::load_config(const char* affpath, const char* key) {
 
     if (enc == "UTF-8") {
       utf8 = 1;
-#ifndef OPENOFFICEORG
-#ifndef MOZILLA_CLIENT
-      initialize_utf_tbl();
-#endif
-#endif
     }
     else
       csconv = get_current_cs(enc);
