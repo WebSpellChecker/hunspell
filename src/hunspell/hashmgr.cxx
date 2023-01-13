@@ -94,8 +94,9 @@ HashMgr::HashMgr(const char* tpath, const char* apath, const char* key)
       csconv(NULL)
 {
   load_config(apath, key);
-  if (!csconv)
-    csconv = get_current_cs(SPELL_ENCODING);
+  // these lines were added in v1.7.2 and leads to error
+  //if (!csconv)
+  //  csconv = get_current_cs(SPELL_ENCODING);
   int ec = load_tables(tpath, key);
   if (ec) {
     /* error condition - what should we do here */
