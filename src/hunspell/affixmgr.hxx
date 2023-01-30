@@ -143,11 +143,9 @@ class AffixMgr {
   std::string cpdvowels; // vowels (for calculating of Hungarian compounding limit,
   std::vector<w_char> cpdvowels_utf16; //vowels for UTF-8 encoding
   std::string cpdsyllablenum; // syllable count incrementing flag
-  const char* pfxappnd;  // BUG: not stateless
   const char* sfxappnd;  // BUG: not stateless
   int sfxextra;          // BUG: not stateless
   FLAG sfxflag;          // BUG: not stateless
-  char* derived;         // BUG: not stateless
   SfxEntry* sfx;         // BUG: not stateless
   PfxEntry* pfx;         // BUG: not stateless
   int checknum;
