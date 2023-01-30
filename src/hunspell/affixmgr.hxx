@@ -79,6 +79,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <mutex>
 
 #include "atypes.hxx"
 #include "baseaffix.hxx"
@@ -191,6 +192,7 @@ class AffixMgr {
   FLAG substandard;
   int checksharps;
   int fullstrip;
+  std::mutex mutex;
 
   int havecontclass;           // boolean variable
   std::bitset<CONTSIZE> contclasses;  // flags of possible continuing classes (twofold
@@ -407,6 +409,7 @@ class AffixMgr {
   int get_checksharps() const;
   std::string encode_flag(unsigned short aflag) const;
   int get_fullstrip() const;
+  std::mutex& get_mutex();
 
  private:
   int parse_file(const char* affpath, const char* key);

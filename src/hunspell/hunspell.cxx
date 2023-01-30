@@ -960,6 +960,10 @@ struct hentry* HunspellImpl::checkword(const std::string& w, int* info, std::str
   // check with affixes
   if (!he && pAMgr) {
     // try stripping off affixes
+
+    auto& mutex = pAMgr->get_mutex();
+    std::scoped_lock lock(mutex);
+
     AffixScratch scratch;
     scratch.trace = t;
     // For an initial-capital query, make affix_check skip an all-uppercase-only
@@ -2213,7 +2217,11 @@ std::vector<std::string> HunspellImpl::suffix_suggest(const std::string& root_wo
   for (size_t i = 0; (i < m_HMgrs.size()) && !he; ++i) {
     he = m_HMgrs[i]->lookup(word, len);
   }
-  if (he) {
+  if (he && pAMgr) {
+
+    auto& mutex = pAMgr->get_mutex();
+    std::scoped_lock lock(mutex);
+
     slst = pAMgr->get_suffix_words(he->astr, he->alen, root_word);
   }
   return slst;
