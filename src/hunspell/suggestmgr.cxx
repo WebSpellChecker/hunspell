@@ -1666,6 +1666,10 @@ int SuggestMgr::checkword(const std::string& word,
   }
 
   if (pAMgr) {
+
+    auto& mutex = pAMgr->get_mutex();
+    std::scoped_lock lock(mutex);
+
     struct hentry* rv = NULL;
     int nosuffix = 0;
 
@@ -1741,6 +1745,10 @@ int SuggestMgr::checkword(const std::string& word,
 
 int SuggestMgr::check_forbidden(const std::string& word) {
   if (pAMgr) {
+
+    auto& mutex = pAMgr->get_mutex();
+    std::scoped_lock lock(mutex);
+
     struct hentry* rv = pAMgr->lookup(word.c_str(), word.size());
     if (rv && rv->astr &&
         (TESTAFF(rv->astr, pAMgr->get_needaffix(), rv->alen) ||
@@ -1797,6 +1805,9 @@ std::string SuggestMgr::suggest_morph(const std::string& in_w) {
     rv = rv->next_homonym;
   }
 
+  auto& mutex = pAMgr->get_mutex();
+  std::scoped_lock lock(mutex);
+
   std::string st = pAMgr->affix_check_morph(w, 0, w.size());
   if (!st.empty()) {
     result.append(st);
@@ -1841,6 +1852,13 @@ std::string SuggestMgr::suggest_hentry_gen(hentry* rv, const char* pattern) {
 
   if (get_sfxcount(HENTRY_DATA(rv)) > sfxcount)
     return result;
+
+  if (!pAMgr)
+      return std::string();
+
+  auto& mutex = pAMgr->get_mutex();
+  std::scoped_lock lock(mutex);
+
 
   if (HENTRY_DATA(rv)) {
     std::string aff = pAMgr->morphgen(HENTRY_WORD(rv), rv->blen, rv->astr, rv->alen,
