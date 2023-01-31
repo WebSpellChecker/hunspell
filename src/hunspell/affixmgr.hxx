@@ -167,7 +167,7 @@ class AffixMgr {
   FLAG substandard;
   int checksharps;
   int fullstrip;
-  std::mutex mutex;
+  std::recursive_mutex mutex;
 
   int havecontclass;           // boolean variable
   char contclasses[CONTSIZE];  // flags of possible continuing classes (twofold
@@ -341,7 +341,7 @@ class AffixMgr {
   int get_checksharps(void) const;
   std::string encode_flag(unsigned short aflag) const;
   int get_fullstrip() const;
-  std::mutex& get_mutex();
+  std::recursive_mutex& get_mutex();
 
  private:
   int parse_file(const char* affpath, const char* key);

@@ -3537,7 +3537,7 @@ int AffixMgr::get_fullstrip() const {
   return fullstrip;
 }
 
-std::mutex& AffixMgr::get_mutex() {
+std::recursive_mutex& AffixMgr::get_mutex() {
     return mutex;
 }
 
