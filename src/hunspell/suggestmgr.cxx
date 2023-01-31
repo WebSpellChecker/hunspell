@@ -1157,6 +1157,9 @@ void SuggestMgr::ngsuggest(std::vector<std::string>& wlst,
   // characters
   struct cs_info* origconv = csconv;
   if (n == -1) {
+
+    throw std::logic_error{ "Couldn't find suggestion with ngsuggest." };
+
     utf8 = 0;  // XXX not state-free
     if (!csconv)
       csconv = get_current_cs("iso88591"); // XXX not state-free
