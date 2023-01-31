@@ -268,6 +268,20 @@ void AffixMgr::finishFileMgr(FileMgr* afflst) {
 // read in aff file and build up prefix and suffix entry objects
 int AffixMgr::parse_file(const char* affpath, const char* key) {
 
+    if (std::string(affpath) == "")
+    {
+        encoding = SPELL_ENCODING;
+
+        if (encoding == "UTF-8") {
+            utf8 = 1;
+        }
+
+        process_pfx_order();
+        process_sfx_order();
+
+        return 0;
+    }
+
   // checking flag duplication
   char dupflags[CONTSIZE];
   char dupflags_ini = 1;

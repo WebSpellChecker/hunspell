@@ -95,11 +95,12 @@ HashMgr::HashMgr(const char* tpath, const char* apath, const char* key)
 {
   load_config(apath, key);
   if (!csconv)
-    csconv = get_current_cs(SPELL_ENCODING);
+    csconv = get_current_cs("ISO8859-1");
   int ec = load_tables(tpath, key);
   if (ec) {
     /* error condition - what should we do here */
-    HUNSPELL_WARNING(stderr, "Hash Manager Error : %d\n", ec);
+    if (ec != 10)
+        HUNSPELL_WARNING(stderr, "Hash Manager Error : %d\n", ec);
     free_table();
     //keep table size to 1 to fix possible division with zero
     tableptr.resize(1, nullptr);
@@ -553,6 +554,10 @@ struct hentry* HashMgr::walk_hashtable(int& col, struct hentry* hp) const {
 
 // load a munched word list and build a hash table on the fly
 int HashMgr::load_tables(const char* tpath, const char* key) {
+
+  if (std::string(tpath) == "")
+    return 10;
+
   // open dictionary file
   FileMgr* dict = new FileMgr(tpath, key);
   if (dict == NULL)
@@ -932,6 +937,20 @@ std::string HashMgr::encode_flag(unsigned short f) const {
 
 // read in aff file and set flag mode
 int HashMgr::load_config(const char* affpath, const char* key) {
+
+    if (std::string(affpath) == "")
+    {
+        enc = SPELL_ENCODING;
+
+        if (enc == "UTF-8") {
+            utf8 = 1;
+        }
+        else
+            csconv = get_current_cs(enc);
+
+        return 0;
+    }
+
   int firstline = 1;
 
   // open the affix file
