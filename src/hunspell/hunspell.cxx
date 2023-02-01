@@ -750,7 +750,7 @@ bool HunspellImpl::spell_internal(const std::string& word, std::vector<std::stri
     wl = scw.size();
 
     // calculate break points for recursion limit
-    for (auto& j : wordbreak) {
+    for (const auto& j : wordbreak) {
       size_t pos = 0;
       while ((pos = scw.find(j, pos)) != std::string::npos) {
         ++nbr;
@@ -761,7 +761,7 @@ bool HunspellImpl::spell_internal(const std::string& word, std::vector<std::stri
       return false;
 
     // check boundary patterns (^begin and end$)
-    for (auto& j : wordbreak) {
+    for (const auto& j : wordbreak) {
       size_t plen = j.size();
       if (plen == 1 || plen > wl)
         continue;
@@ -785,7 +785,7 @@ bool HunspellImpl::spell_internal(const std::string& word, std::vector<std::stri
     }
 
     // other patterns
-    for (auto& j : wordbreak) {
+    for (const auto& j : wordbreak) {
       size_t plen = j.size();
       size_t found = scw.find(j);
       if ((found > 0) && (found < wl - plen)) {
@@ -821,7 +821,7 @@ bool HunspellImpl::spell_internal(const std::string& word, std::vector<std::stri
     }
 
     // other patterns (break at first break point)
-    for (auto& j : wordbreak) {
+    for (const auto& j : wordbreak) {
       size_t plen = j.size(), found = scw.find(j);
       if ((found > 0) && (found < wl - plen)) {
         if (!spell(scw.substr(found + plen), candidate_stack, nullptr, nullptr, suggest_start))
