@@ -137,6 +137,10 @@ public:
  int input_conv(const char* word, char* dest, size_t destsize);
  void set_trace_callback(HunspellTraceCallback callback, void* userdata);
 
+  void set_onlymaxdiff(bool value);
+  void set_maxdiff(unsigned value);
+  void set_maxngramsugs(unsigned value);
+
 private:
   std::vector<std::unique_ptr<HashMgr>> m_HMgrs;
   std::unique_ptr<TraceCtx> m_trace;
@@ -2344,6 +2348,24 @@ int HunspellImpl::input_conv(const char* word, char* dest, size_t destsize) {
   return 0;
 }
 
+void HunspellImpl::set_onlymaxdiff(const bool value)
+{
+    if (pAMgr)
+        pAMgr->set_onlymaxdiff(value);
+}
+
+void HunspellImpl::set_maxdiff(const unsigned value)
+{
+    if (pAMgr)
+        pAMgr->set_maxdiff(value);
+}
+
+void HunspellImpl::set_maxngramsugs(const unsigned value)
+{
+    if (pAMgr)
+        pAMgr->set_maxngramsugs(value);
+}
+
 Hunspell::Hunspell(const char* affpath, const char* dpath, const char* key)
   : m_Impl(new HunspellImpl(affpath, dpath, key)) {
 }
@@ -2493,6 +2515,24 @@ int Hunspell::input_conv(const char* word, char* dest, size_t destsize) {
 
 void Hunspell::set_trace_callback(HunspellTraceCallback callback, void* userdata) {
   m_Impl->set_trace_callback(callback, userdata);
+}
+
+void Hunspell::set_onlymaxdiff(const bool value)
+{
+    if (m_Impl)
+        m_Impl->set_onlymaxdiff(value);
+}
+
+void Hunspell::set_maxdiff(const unsigned value)
+{
+    if (m_Impl)
+        m_Impl->set_maxdiff(value);
+}
+
+void Hunspell::set_maxngramsugs(const unsigned value)
+{
+    if (m_Impl)
+        m_Impl->set_maxngramsugs(value);
 }
 
 Hunhandle* Hunspell_create(const char* affpath, const char* dpath) {
