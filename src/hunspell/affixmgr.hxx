@@ -342,6 +342,9 @@ class AffixMgr {
   std::string encode_flag(unsigned short aflag) const;
   int get_fullstrip() const;
   std::recursive_mutex& get_mutex();
+  void set_onlymaxdiff(bool value);
+  void set_maxdiff(unsigned value);
+  void set_maxngramsugs(unsigned value);
 
  private:
   int parse_file(const char* affpath, const char* key);

@@ -3555,6 +3555,21 @@ std::recursive_mutex& AffixMgr::get_mutex() {
     return mutex;
 }
 
+void AffixMgr::set_onlymaxdiff(const bool value)
+{
+    onlymaxdiff = static_cast<int>(value);
+}
+
+void AffixMgr::set_maxdiff(const unsigned value)
+{
+    maxdiff = static_cast<int>(value);
+}
+
+void AffixMgr::set_maxngramsugs(const unsigned value)
+{
+    maxngramsugs = static_cast<int>(value);
+}
+
 FLAG AffixMgr::get_keepcase() const {
   return keepcase;
 }
