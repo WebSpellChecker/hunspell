@@ -131,6 +131,9 @@ class SuggestMgr {
   std::string suggest_gen(const std::vector<std::string>& pl, const std::string& pattern,
                           std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::time_point::max());
 
+  void set_maxngramsugs(unsigned value);
+  void set_nosplitsugs(bool value);
+
  private:
   void testsug(std::vector<std::string>& wlst,
                const std::string& candidate,
