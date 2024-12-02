@@ -1989,6 +1989,16 @@ std::string SuggestMgr::suggest_gen(const std::vector<std::string>& desc, const 
   return result2;
 }
 
+void SuggestMgr::set_maxngramsugs(const unsigned value)
+{
+    maxngramsugs = static_cast<int>(value);
+}
+
+void SuggestMgr::set_nosplitsugs(const bool value)
+{
+    nosplitsugs = static_cast<int>(value);
+}
+
 // generate an n-gram score comparing s1 and s2, UTF16 version
 int SuggestMgr::ngram(int n,
                       const std::vector<w_char>& su1,

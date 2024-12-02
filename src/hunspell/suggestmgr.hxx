@@ -127,6 +127,9 @@ class SuggestMgr {
   std::string suggest_morph(const std::string& word);
   std::string suggest_gen(const std::vector<std::string>& pl, const std::string& pattern);
 
+  void set_maxngramsugs(unsigned value);
+  void set_nosplitsugs(bool value);
+
  private:
   void testsug(std::vector<std::string>& wlst,
                const std::string& candidate,

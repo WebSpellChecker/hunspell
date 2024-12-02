@@ -3570,6 +3570,11 @@ void AffixMgr::set_maxngramsugs(const unsigned value)
     maxngramsugs = static_cast<int>(value);
 }
 
+void AffixMgr::set_nosplitsugs(const bool value)
+{
+    nosplitsugs = static_cast<int>(value);
+}
+
 FLAG AffixMgr::get_keepcase() const {
   return keepcase;
 }
