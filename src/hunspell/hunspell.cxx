@@ -131,11 +131,13 @@ public:
   void set_maxdiff(unsigned value);
   void set_maxngramsugs(unsigned value);
   void set_nosplitsugs(bool value);
+  void set_compoundhyphensuggest(bool value);
 
   bool get_onlymaxdiff() const;
   unsigned get_maxdiff() const;
   unsigned get_maxngramsugs() const;
   bool get_nosplitsugs() const;
+  bool get_compoundhyphensuggest() const;
 
 private:
   AffixMgr* pAMgr;
@@ -148,6 +150,7 @@ private:
   int utf8;
   int complexprefixes;
   std::vector<std::string> wordbreak;
+  bool compoundhyphensuggest{ true };
 
 private:
   std::vector<std::string> analyze_internal(const std::string& word);
@@ -1321,7 +1324,7 @@ std::vector<std::string> HunspellImpl::suggest_internal(const std::string& word,
   // while "Afro-American" is missing from the dictionary.
   // TODO avoid possible overgeneration
   size_t dash_pos = scw.find('-');
-  if (dash_pos != std::string::npos) {
+  if (compoundhyphensuggest && dash_pos != std::string::npos) {
     int nodashsug = 1;
     for (size_t j = 0; j < slst.size() && nodashsug == 1; ++j) {
       if (slst[j].find('-') != std::string::npos)
@@ -2150,6 +2153,11 @@ void HunspellImpl::set_nosplitsugs(const bool value)
     }
 }
 
+void HunspellImpl::set_compoundhyphensuggest(const bool value)
+{
+    compoundhyphensuggest = value;
+}
+
 bool HunspellImpl::get_onlymaxdiff() const
 {
     if (pAMgr)
@@ -2180,6 +2188,11 @@ bool HunspellImpl::get_nosplitsugs() const
         return static_cast<unsigned>(pAMgr->get_nosplitsugs());
 
     return false;
+}
+
+bool HunspellImpl::get_compoundhyphensuggest() const
+{
+    return compoundhyphensuggest;
 }
 
 Hunspell::Hunspell(const char* affpath, const char* dpath, const char* key)
@@ -2344,6 +2357,12 @@ void Hunspell::set_nosplitsugs(const bool value)
         m_Impl->set_nosplitsugs(value);
 }
 
+void Hunspell::set_compoundhyphensuggest(const bool value)
+{
+    if (m_Impl)
+        m_Impl->set_compoundhyphensuggest(value);
+}
+
 bool Hunspell::get_onlymaxdiff() const
 {
     if (m_Impl)
@@ -2374,6 +2393,14 @@ bool Hunspell::get_nosplitsugs() const
         return m_Impl->get_nosplitsugs();
 
     return false;
+}
+
+bool Hunspell::get_compoundhyphensuggest() const
+{
+    if (m_Impl)
+        return m_Impl->get_compoundhyphensuggest();
+
+    return true;
 }
 
 Hunhandle* Hunspell_create(const char* affpath, const char* dpath) {
