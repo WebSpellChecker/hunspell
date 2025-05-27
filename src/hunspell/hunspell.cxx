@@ -132,6 +132,11 @@ public:
   void set_maxngramsugs(unsigned value);
   void set_nosplitsugs(bool value);
 
+  bool get_onlymaxdiff() const;
+  unsigned get_maxdiff() const;
+  unsigned get_maxngramsugs() const;
+  bool get_nosplitsugs() const;
+
 private:
   AffixMgr* pAMgr;
   std::vector<HashMgr*> m_HMgrs;
@@ -2145,6 +2150,38 @@ void HunspellImpl::set_nosplitsugs(const bool value)
     }
 }
 
+bool HunspellImpl::get_onlymaxdiff() const
+{
+    if (pAMgr)
+        return static_cast<bool>(pAMgr->get_onlymaxdiff());
+
+    return false;
+}
+
+unsigned HunspellImpl::get_maxdiff() const
+{
+    if (pAMgr)
+        return static_cast<unsigned>(pAMgr->get_maxdiff());
+
+    return 5u;
+}
+
+unsigned HunspellImpl::get_maxngramsugs() const
+{
+    if (pAMgr)
+        return static_cast<unsigned>(pAMgr->get_maxngramsugs());
+
+    return static_cast<unsigned>(MAXNGRAMSUGS);
+}
+
+bool HunspellImpl::get_nosplitsugs() const
+{
+    if (pAMgr)
+        return static_cast<unsigned>(pAMgr->get_nosplitsugs());
+
+    return false;
+}
+
 Hunspell::Hunspell(const char* affpath, const char* dpath, const char* key)
   : m_Impl(new HunspellImpl(affpath, dpath, key)) {
 }
@@ -2305,6 +2342,38 @@ void Hunspell::set_nosplitsugs(const bool value)
 {
     if (m_Impl)
         m_Impl->set_nosplitsugs(value);
+}
+
+bool Hunspell::get_onlymaxdiff() const
+{
+    if (m_Impl)
+        return m_Impl->get_onlymaxdiff();
+
+    return false;
+}
+
+unsigned Hunspell::get_maxdiff() const
+{
+    if (m_Impl)
+        return m_Impl->get_maxdiff();
+
+    return 5u;
+}
+
+unsigned Hunspell::get_maxngramsugs() const
+{
+    if (m_Impl)
+        return m_Impl->get_maxngramsugs();
+
+    return static_cast<unsigned>(MAXNGRAMSUGS);
+}
+
+bool Hunspell::get_nosplitsugs() const
+{
+    if (m_Impl)
+        return m_Impl->get_nosplitsugs();
+
+    return false;
 }
 
 Hunhandle* Hunspell_create(const char* affpath, const char* dpath) {

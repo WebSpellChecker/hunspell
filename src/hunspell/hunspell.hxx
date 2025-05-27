@@ -230,6 +230,11 @@ class LIBHUNSPELL_DLL_EXPORTED Hunspell {
   void set_maxdiff(unsigned value);
   void set_maxngramsugs(unsigned value);
   void set_nosplitsugs(bool value);
+
+  bool get_onlymaxdiff() const;
+  unsigned get_maxdiff() const;
+  unsigned get_maxngramsugs() const;
+  bool get_nosplitsugs() const;
 };
 
 #endif
