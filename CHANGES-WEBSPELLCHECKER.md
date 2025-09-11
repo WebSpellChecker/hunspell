@@ -4,7 +4,11 @@ This document records WebSpellChecker-specific changes on top of upstream Hunspe
 
 ### Configuration
 - Implement an API method to disable compound hyphen suggestion behavior.
-- Make the following parameters configurable through the API: MAXNGRAMSUGS, NOSPLITSUGS, MAXDIFF, ONLYMAXDIFF.
+- Make the following parameters configurable through the API:
+  - MAXNGRAMSUGS
+  - NOSPLITSUGS
+  - MAXDIFF
+  - ONLYMAXDIFF.
 
 ### Security
 - Throw an exception for words with non-BMP Unicode characters to prevent losing the suggestmgr state.
