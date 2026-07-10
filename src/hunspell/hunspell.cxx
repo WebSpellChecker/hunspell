@@ -130,6 +130,7 @@ public:
   void set_onlymaxdiff(bool value);
   void set_maxdiff(unsigned value);
   void set_maxngramsugs(unsigned value);
+  void set_phone(bool value);
   void set_nosplitsugs(bool value);
   void set_compoundhyphensuggest(bool value);
 
@@ -2144,6 +2145,12 @@ void HunspellImpl::set_maxngramsugs(const unsigned value)
     }
 }
 
+void HunspellImpl::set_phone(const bool value)
+{
+    if (pAMgr)
+        pAMgr->set_phone(value);
+}
+
 void HunspellImpl::set_nosplitsugs(const bool value)
 {
     if (pAMgr && pSMgr)
@@ -2349,6 +2356,12 @@ void Hunspell::set_maxngramsugs(const unsigned value)
 {
     if (m_Impl)
         m_Impl->set_maxngramsugs(value);
+}
+
+void Hunspell::set_phone(const bool value)
+{
+    if (m_Impl)
+        m_Impl->set_phone(value);
 }
 
 void Hunspell::set_nosplitsugs(const bool value)

@@ -133,6 +133,7 @@ class AffixMgr {
   bool parseddefcpd;
   std::vector<flagentry> defcpdtable;
   phonetable* phone;
+  bool usephone;  // allow PHONE-based suggestions to be turned off at runtime
   int maxngramsugs;
   int maxcpdsugs;
   int maxdiff;
@@ -345,6 +346,7 @@ class AffixMgr {
   void set_onlymaxdiff(bool value);
   void set_maxdiff(unsigned value);
   void set_maxngramsugs(unsigned value);
+  void set_phone(bool value);
   void set_nosplitsugs(bool value);
 
  private:
