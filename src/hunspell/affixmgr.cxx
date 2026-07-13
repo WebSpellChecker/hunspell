@@ -105,6 +105,7 @@ AffixMgr::AffixMgr(const char* affpath,
   parsedcheckcpd = false;
   parseddefcpd = false;
   phone = NULL;
+  usephone = true;
   compoundflag = FLAG_NULL;        // permits word in compound forms
   compoundbegin = FLAG_NULL;       // may be first word in compound forms
   compoundmiddle = FLAG_NULL;      // may be middle word in compound forms
@@ -3514,7 +3515,7 @@ RepList* AffixMgr::get_oconvtable() const {
 
 // return replacing table
 struct phonetable* AffixMgr::get_phonetable() const {
-  if (!phone)
+  if (!phone || !usephone)
     return NULL;
   return phone;
 }
@@ -3568,6 +3569,11 @@ void AffixMgr::set_maxdiff(const unsigned value)
 void AffixMgr::set_maxngramsugs(const unsigned value)
 {
     maxngramsugs = static_cast<int>(value);
+}
+
+void AffixMgr::set_phone(const bool value)
+{
+    usephone = value;
 }
 
 void AffixMgr::set_nosplitsugs(const bool value)

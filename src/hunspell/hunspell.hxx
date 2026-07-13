@@ -229,6 +229,7 @@ class LIBHUNSPELL_DLL_EXPORTED Hunspell {
   void set_onlymaxdiff(bool value);
   void set_maxdiff(unsigned value);
   void set_maxngramsugs(unsigned value);
+  void set_phone(bool value);
   void set_nosplitsugs(bool value);
   void set_compoundhyphensuggest(bool value);
 
