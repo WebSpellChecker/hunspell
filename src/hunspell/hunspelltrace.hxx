@@ -145,7 +145,10 @@ class TraceScope {
 
 class TraceSuppress {
  public:
-  explicit TraceSuppress(TraceCtx* context) : m_context(context) {
+  // Leave the shared counter alone while no callback is set, so threads that
+  // share one Hunspell object do not race on it (WebSpellChecker change)
+  explicit TraceSuppress(TraceCtx* context)
+      : m_context(context && context->m_callback ? context : nullptr) {
     if (m_context)
       ++m_context->m_suppressed;
   }
