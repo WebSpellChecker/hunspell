@@ -31,3 +31,4 @@ This document records WebSpellChecker-specific changes on top of upstream Hunspe
 ### Multithreading
 - Make the library multithreaded by synchronizing the affix manager.
 - Do not touch the shared trace counter in `suggest` while tracing is off (1.7.4 added it, and threads sharing one Hunspell object raced on it).
+- Keep the start time of the suggestion search per thread. Since 1.7.3 it is a `SuggestMgr` member that `suggest` and `spell` write, so threads sharing one Hunspell object overwrote each other's time limit.

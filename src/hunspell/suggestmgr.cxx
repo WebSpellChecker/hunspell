@@ -81,6 +81,12 @@
 
 const w_char W_VLINE = {'\0', '|'};
 
+// Start of the running suggest() search, for its time limit. Upstream keeps it in
+// the SuggestMgr object, so threads that share one Hunspell object overwrote it for
+// each other, and spell() writes it too through suggest(test_simplesug). Keep one
+// per thread instead (WebSpellChecker change)
+static thread_local std::chrono::steady_clock::time_point suggest_start;
+
 #define MAX_CHAR_DISTANCE 4
 #define MAXWORDUTF8LEN (MAXWORDLEN * 3)
 

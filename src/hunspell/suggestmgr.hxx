@@ -112,7 +112,8 @@ class SuggestMgr {
   int maxngramsugs;
   int maxcpdsugs;
   int complexprefixes;
-  std::chrono::steady_clock::time_point suggest_start;
+  // the start time of the running search is thread_local in suggestmgr.cxx
+  // (WebSpellChecker change)
 
  public:
   SuggestMgr(const std::string& tryme, unsigned int maxn, AffixMgr* aptr);
