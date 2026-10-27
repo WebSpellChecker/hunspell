@@ -230,6 +230,11 @@ bool SuggestMgr::suggest(std::vector<std::string>& slst,
   int info = 0;
   for (int cpdsuggest = 0; cpdsuggest < 3 && nocompoundtwowords == 0; cpdsuggest++) {
 
+    // a time budget for each loop, as 1.7.2 had: with one budget for all three
+    // the first loop could spend it, and the search stopped before the loops and
+    // the ngram suggestions after it (WebSpellChecker change)
+    suggest_start = std::chrono::steady_clock::now();
+
     // limit compound suggestion
     if (cpdsuggest > 0)
       oldSug = slst.size();
