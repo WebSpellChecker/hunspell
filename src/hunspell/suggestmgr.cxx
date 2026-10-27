@@ -1690,8 +1690,10 @@ void SuggestMgr::ngsuggest(std::vector<std::string>& wlst,
           // don't suggest previous suggestions or a previous suggestion with
           // prefixes or affixes
           if ((!guessorig[i] && strstr(guess[i], j.c_str())) || (guessorig[i] && strstr(guessorig[i], j.c_str())) ||
-              // check forbidden words
-              !checkword(guess[i], 0, nullptr, nullptr)) {
+              // check forbidden words, without the time limit: the guesses
+              // are found, and under the limit all of them were dropped once
+              // the time was up (WebSpellChecker change)
+              !checkword(guess[i], 0, nullptr, nullptr, /*time_limited=*/false)) {
             unique = 0;
             break;
           }
@@ -1722,8 +1724,9 @@ void SuggestMgr::ngsuggest(std::vector<std::string>& wlst,
             // don't suggest previous suggestions or a previous suggestion with
             // prefixes or affixes
             if (strstr(i, j.c_str()) ||
-                // check forbidden words
-                !checkword(i, 0, nullptr, nullptr)) {
+                // check forbidden words, without the time limit as above
+                // (WebSpellChecker change)
+                !checkword(i, 0, nullptr, nullptr, /*time_limited=*/false)) {
               unique = 0;
               break;
             }
@@ -1745,9 +1748,12 @@ void SuggestMgr::ngsuggest(std::vector<std::string>& wlst,
 int SuggestMgr::checkword(const std::string& word,
                           int cpdsuggest,
                           int* timer,
-                          std::chrono::steady_clock::time_point* timelimit) {
-  // check overall suggestion time limit
-  if (std::chrono::steady_clock::now() - suggest_start > TIMELIMIT_SUGGESTION_MS)
+                          std::chrono::steady_clock::time_point* timelimit,
+                          bool time_limited) {
+  // check overall suggestion time limit, unless the caller checks a suggestion
+  // already found: then a word is not rejected only because the time is up
+  // (WebSpellChecker change)
+  if (time_limited && std::chrono::steady_clock::now() - suggest_start > TIMELIMIT_SUGGESTION_MS)
     return 0;
 
   // check time limit

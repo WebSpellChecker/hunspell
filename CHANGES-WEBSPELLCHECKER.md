@@ -24,6 +24,7 @@ This document records WebSpellChecker-specific changes on top of upstream Hunspe
 
 ### Suggestions
 - Check found suggestions of capitalized words against KEEPCASE and FORBIDDENWORD without the global time limit, as 1.7.2 did. Since 1.7.3 the check runs under the limit, and once the time is up it drops every suggestion, so long compound words got none.
+- Check the ngram suggestions against forbidden words without the time limit, for the same reason: since 1.7.3 the check dropped every ngram suggestion once the time was up.
 
 ### Security
 - Throw an exception for words with non-BMP Unicode characters to prevent losing the suggestmgr state.

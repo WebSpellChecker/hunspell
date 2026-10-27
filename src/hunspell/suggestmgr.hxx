@@ -142,7 +142,8 @@ class SuggestMgr {
                int* timer,
                std::chrono::steady_clock::time_point* timelimit,
                int& info);
-  int checkword(const std::string& word, int, int*, std::chrono::steady_clock::time_point*);
+  int checkword(const std::string& word, int, int*, std::chrono::steady_clock::time_point*,
+                bool time_limited = true);
   int check_forbidden(const std::string&);
 
   void capchars(std::vector<std::string>&, const std::string&, int, int&);
