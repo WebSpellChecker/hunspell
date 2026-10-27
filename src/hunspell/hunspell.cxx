@@ -1138,6 +1138,12 @@ std::vector<std::string> HunspellImpl::suggest(const std::string& word, std::vec
   }
 
   // remove bad capitalized and forbidden forms
+  // Check the found suggestions without the global time limit. With
+  // suggest_start, spell() returns false for every word once 250 ms have
+  // passed since suggest() started, so after a slow search this filter
+  // dropped all suggestions. 1.7.2 checked them without a limit too
+  // (WebSpellChecker change)
+  const auto no_time_limit = std::chrono::steady_clock::time_point::max();
   if (pAMgr && (pAMgr->get_keepcase() || pAMgr->get_forbiddenword())) {
     switch (captype) {
       case INITCAP:
@@ -1149,7 +1155,7 @@ std::vector<std::string> HunspellImpl::suggest(const std::string& word, std::vec
           // A space-containing suggestion can be an "insert a space" split
           // whose parts each spell on their own, so it is good when every
           // part spells even though the whole string does not.
-          bool bad = !spell(slst[j], spell_candidate_stack, nullptr, nullptr, suggest_start);
+          bool bad = !spell(slst[j], spell_candidate_stack, nullptr, nullptr, no_time_limit);
           if (bad && slst[j].find(' ') != std::string::npos) {
             bad = false;
             for (size_t start = 0; start <= slst[j].size(); ) {
@@ -1157,7 +1163,7 @@ std::vector<std::string> HunspellImpl::suggest(const std::string& word, std::vec
               size_t end = (sp == std::string::npos) ? slst[j].size() : sp;
               std::string part = slst[j].substr(start, end - start);
               if (!part.empty() &&
-                  !spell(part, spell_candidate_stack, nullptr, nullptr, suggest_start)) {
+                  !spell(part, spell_candidate_stack, nullptr, nullptr, no_time_limit)) {
                 bad = true;
                 break;
               }
@@ -1175,12 +1181,12 @@ std::vector<std::string> HunspellImpl::suggest(const std::string& word, std::vec
               s = slst[j];
             }
             mkallsmall2(s, w);
-            if (spell(s, spell_candidate_stack, nullptr, nullptr, suggest_start)) {
+            if (spell(s, spell_candidate_stack, nullptr, nullptr, no_time_limit)) {
               slst[l] = std::move(s);
               ++l;
             } else {
               mkinitcap2(s, w);
-              if (spell(s, spell_candidate_stack, nullptr, nullptr, suggest_start)) {
+              if (spell(s, spell_candidate_stack, nullptr, nullptr, no_time_limit)) {
                 slst[l] = std::move(s);
                 ++l;
               }
