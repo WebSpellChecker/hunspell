@@ -2,6 +2,12 @@
 
 This document records WebSpellChecker-specific changes on top of upstream Hunspell.
 
+### Upstream base
+- Each upstream release gets its own branch, `multithreaded_<version>`, made from the upstream release tag with these changes on top as separate commits. The current one is `multithreaded_1.7.6`. `multithreaded_1.7.2` stays for older releases.
+- `master` points to the branch of the latest release, so `git log v1.7.6..master` lists these changes. A release gets a tag such as `v1.7.6-wsc.1`.
+- To update to a new upstream release, make `multithreaded_<version>` from its tag and move the changes onto it one by one with `git cherry-pick` (or `git rebase --onto v1.7.7 v1.7.6`). Review it in a pull request against a branch at the upstream tag, then move `master` to it with a push, not with a merge button, so the commits keep their hashes. Other projects pin these commits by hash, so a released commit must stay reachable through its branch or tag.
+- Do not use GitHub's "Sync fork": it merges upstream `master`, which is not a release.
+
 ### Configuration
 - Implement an API method to disable compound hyphen suggestion behavior.
 - Make the following parameters configurable through the API:
@@ -9,9 +15,19 @@ This document records WebSpellChecker-specific changes on top of upstream Hunspe
   - NOSPLITSUGS
   - MAXDIFF
   - ONLYMAXDIFF.
+- Add getters for these parameters.
+- Turn PHONE-based suggestions on or off at runtime (`set_phone`).
+
+### Dictionaries
+- UTF-8 is the default encoding when the .aff file has no SET line.
+- A Hunspell object can be created with empty .aff and .dic paths, for word lists added with `add()`. The empty .dic path is not reported as a load error.
+
+### Suggestions
+- Check found suggestions of capitalized words against KEEPCASE and FORBIDDENWORD without the global time limit, as 1.7.2 did. Since 1.7.3 the check runs under the limit, and once the time is up it drops every suggestion, so long compound words got none.
 
 ### Security
 - Throw an exception for words with non-BMP Unicode characters to prevent losing the suggestmgr state.
 
 ### Multithreading
 - Make the library multithreaded by synchronizing the affix manager.
+- Do not touch the shared trace counter in `suggest` while tracing is off (1.7.4 added it, and threads sharing one Hunspell object raced on it).
