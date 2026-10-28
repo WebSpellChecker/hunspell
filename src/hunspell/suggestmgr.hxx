@@ -112,7 +112,8 @@ class SuggestMgr {
   int maxngramsugs;
   int maxcpdsugs;
   int complexprefixes;
-  std::chrono::steady_clock::time_point suggest_start;
+  // the start time of the running search is thread_local in suggestmgr.cxx
+  // (WebSpellChecker change)
 
  public:
   SuggestMgr(const std::string& tryme, unsigned int maxn, AffixMgr* aptr);
@@ -131,6 +132,9 @@ class SuggestMgr {
   std::string suggest_gen(const std::vector<std::string>& pl, const std::string& pattern,
                           std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::time_point::max());
 
+  void set_maxngramsugs(unsigned value);
+  void set_nosplitsugs(bool value);
+
  private:
   void testsug(std::vector<std::string>& wlst,
                const std::string& candidate,
@@ -138,7 +142,8 @@ class SuggestMgr {
                int* timer,
                std::chrono::steady_clock::time_point* timelimit,
                int& info);
-  int checkword(const std::string& word, int, int*, std::chrono::steady_clock::time_point*);
+  int checkword(const std::string& word, int, int*, std::chrono::steady_clock::time_point*,
+                bool time_limited = true);
   int check_forbidden(const std::string&);
 
   void capchars(std::vector<std::string>&, const std::string&, int, int&);

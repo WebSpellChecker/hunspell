@@ -253,6 +253,19 @@ class LIBHUNSPELL_DLL_EXPORTED Hunspell {
    * handed back to the callback untouched.
    */
   void set_trace_callback(HunspellTraceCallback callback, void* userdata);
+
+  void set_onlymaxdiff(bool value);
+  void set_maxdiff(unsigned value);
+  void set_maxngramsugs(unsigned value);
+  void set_phone(bool value);
+  void set_nosplitsugs(bool value);
+  void set_compoundhyphensuggest(bool value);
+
+  bool get_onlymaxdiff() const;
+  unsigned get_maxdiff() const;
+  unsigned get_maxngramsugs() const;
+  bool get_nosplitsugs() const;
+  bool get_compoundhyphensuggest() const;
 };
 
 #endif

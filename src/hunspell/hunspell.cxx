@@ -137,6 +137,19 @@ public:
  int input_conv(const char* word, char* dest, size_t destsize);
  void set_trace_callback(HunspellTraceCallback callback, void* userdata);
 
+  void set_onlymaxdiff(bool value);
+  void set_maxdiff(unsigned value);
+  void set_maxngramsugs(unsigned value);
+  void set_phone(bool value);
+  void set_nosplitsugs(bool value);
+  void set_compoundhyphensuggest(bool value);
+
+  bool get_onlymaxdiff() const;
+  unsigned get_maxdiff() const;
+  unsigned get_maxngramsugs() const;
+  bool get_nosplitsugs() const;
+  bool get_compoundhyphensuggest() const;
+
 private:
   std::vector<std::unique_ptr<HashMgr>> m_HMgrs;
   std::unique_ptr<TraceCtx> m_trace;
@@ -153,6 +166,7 @@ private:
   int utf8;
   int complexprefixes;
   std::vector<std::string> wordbreak;
+  bool compoundhyphensuggest{ true };
 
 private:
   std::vector<std::string> analyze_internal(const std::string& word);
@@ -750,7 +764,7 @@ bool HunspellImpl::spell_internal(const std::string& word, std::vector<std::stri
     wl = scw.size();
 
     // calculate break points for recursion limit
-    for (auto& j : wordbreak) {
+    for (const auto& j : wordbreak) {
       size_t pos = 0;
       while ((pos = scw.find(j, pos)) != std::string::npos) {
         ++nbr;
@@ -761,7 +775,7 @@ bool HunspellImpl::spell_internal(const std::string& word, std::vector<std::stri
       return false;
 
     // check boundary patterns (^begin and end$)
-    for (auto& j : wordbreak) {
+    for (const auto& j : wordbreak) {
       size_t plen = j.size();
       if (plen == 1 || plen > wl)
         continue;
@@ -785,7 +799,7 @@ bool HunspellImpl::spell_internal(const std::string& word, std::vector<std::stri
     }
 
     // other patterns
-    for (auto& j : wordbreak) {
+    for (const auto& j : wordbreak) {
       size_t plen = j.size();
       size_t found = scw.find(j);
       if ((found > 0) && (found < wl - plen)) {
@@ -821,7 +835,7 @@ bool HunspellImpl::spell_internal(const std::string& word, std::vector<std::stri
     }
 
     // other patterns (break at first break point)
-    for (auto& j : wordbreak) {
+    for (const auto& j : wordbreak) {
       size_t plen = j.size(), found = scw.find(j);
       if ((found > 0) && (found < wl - plen)) {
         if (!spell(scw.substr(found + plen), candidate_stack, nullptr, nullptr, suggest_start))
@@ -960,6 +974,10 @@ struct hentry* HunspellImpl::checkword(const std::string& w, int* info, std::str
   // check with affixes
   if (!he && pAMgr) {
     // try stripping off affixes
+
+    auto& mutex = pAMgr->get_mutex();
+    std::scoped_lock lock(mutex);
+
     AffixScratch scratch;
     scratch.trace = t;
     // For an initial-capital query, make affix_check skip an all-uppercase-only
@@ -1120,6 +1138,12 @@ std::vector<std::string> HunspellImpl::suggest(const std::string& word, std::vec
   }
 
   // remove bad capitalized and forbidden forms
+  // Check the found suggestions without the global time limit. With
+  // suggest_start, spell() returns false for every word once 250 ms have
+  // passed since suggest() started, so after a slow search this filter
+  // dropped all suggestions. 1.7.2 checked them without a limit too
+  // (WebSpellChecker change)
+  const auto no_time_limit = std::chrono::steady_clock::time_point::max();
   if (pAMgr && (pAMgr->get_keepcase() || pAMgr->get_forbiddenword())) {
     switch (captype) {
       case INITCAP:
@@ -1131,7 +1155,7 @@ std::vector<std::string> HunspellImpl::suggest(const std::string& word, std::vec
           // A space-containing suggestion can be an "insert a space" split
           // whose parts each spell on their own, so it is good when every
           // part spells even though the whole string does not.
-          bool bad = !spell(slst[j], spell_candidate_stack, nullptr, nullptr, suggest_start);
+          bool bad = !spell(slst[j], spell_candidate_stack, nullptr, nullptr, no_time_limit);
           if (bad && slst[j].find(' ') != std::string::npos) {
             bad = false;
             for (size_t start = 0; start <= slst[j].size(); ) {
@@ -1139,7 +1163,7 @@ std::vector<std::string> HunspellImpl::suggest(const std::string& word, std::vec
               size_t end = (sp == std::string::npos) ? slst[j].size() : sp;
               std::string part = slst[j].substr(start, end - start);
               if (!part.empty() &&
-                  !spell(part, spell_candidate_stack, nullptr, nullptr, suggest_start)) {
+                  !spell(part, spell_candidate_stack, nullptr, nullptr, no_time_limit)) {
                 bad = true;
                 break;
               }
@@ -1157,12 +1181,12 @@ std::vector<std::string> HunspellImpl::suggest(const std::string& word, std::vec
               s = slst[j];
             }
             mkallsmall2(s, w);
-            if (spell(s, spell_candidate_stack, nullptr, nullptr, suggest_start)) {
+            if (spell(s, spell_candidate_stack, nullptr, nullptr, no_time_limit)) {
               slst[l] = std::move(s);
               ++l;
             } else {
               mkinitcap2(s, w);
-              if (spell(s, spell_candidate_stack, nullptr, nullptr, suggest_start)) {
+              if (spell(s, spell_candidate_stack, nullptr, nullptr, no_time_limit)) {
                 slst[l] = std::move(s);
                 ++l;
               }
@@ -1495,7 +1519,7 @@ std::vector<std::string> HunspellImpl::suggest_internal(const std::string& word,
   // while "Afro-American" is missing from the dictionary.
   // TODO avoid possible overgeneration
   size_t dash_pos = scw.find('-');
-  if (dash_pos != std::string::npos) {
+  if (compoundhyphensuggest && dash_pos != std::string::npos) {
     int nodashsug = 1;
     for (size_t j = 0; j < slst.size() && nodashsug == 1; ++j) {
       if (slst[j].find('-') != std::string::npos)
@@ -2213,7 +2237,11 @@ std::vector<std::string> HunspellImpl::suffix_suggest(const std::string& root_wo
   for (size_t i = 0; (i < m_HMgrs.size()) && !he; ++i) {
     he = m_HMgrs[i]->lookup(word, len);
   }
-  if (he) {
+  if (he && pAMgr) {
+
+    auto& mutex = pAMgr->get_mutex();
+    std::scoped_lock lock(mutex);
+
     slst = pAMgr->get_suffix_words(he->astr, he->alen, root_word);
   }
   return slst;
@@ -2334,6 +2362,84 @@ int HunspellImpl::input_conv(const char* word, char* dest, size_t destsize) {
     return 1;
   }
   return 0;
+}
+
+void HunspellImpl::set_onlymaxdiff(const bool value)
+{
+    if (pAMgr)
+        pAMgr->set_onlymaxdiff(value);
+}
+
+void HunspellImpl::set_maxdiff(const unsigned value)
+{
+    if (pAMgr)
+        pAMgr->set_maxdiff(value);
+}
+
+void HunspellImpl::set_maxngramsugs(const unsigned value)
+{
+    if (pAMgr && pSMgr)
+    {
+        pAMgr->set_maxngramsugs(value);
+        pSMgr->set_maxngramsugs(value);
+    }
+}
+
+void HunspellImpl::set_phone(const bool value)
+{
+    if (pAMgr)
+        pAMgr->set_phone(value);
+}
+
+void HunspellImpl::set_nosplitsugs(const bool value)
+{
+    if (pAMgr && pSMgr)
+    {
+        pAMgr->set_nosplitsugs(value);
+        pSMgr->set_nosplitsugs(value);
+    }
+}
+
+void HunspellImpl::set_compoundhyphensuggest(const bool value)
+{
+    compoundhyphensuggest = value;
+}
+
+bool HunspellImpl::get_onlymaxdiff() const
+{
+    if (pAMgr)
+        return static_cast<bool>(pAMgr->get_onlymaxdiff());
+
+    return false;
+}
+
+unsigned HunspellImpl::get_maxdiff() const
+{
+    if (pAMgr)
+        return static_cast<unsigned>(pAMgr->get_maxdiff());
+
+    return 5u;
+}
+
+unsigned HunspellImpl::get_maxngramsugs() const
+{
+    if (pAMgr)
+        return static_cast<unsigned>(pAMgr->get_maxngramsugs());
+
+    return static_cast<unsigned>(MAXNGRAMSUGS);
+}
+
+bool HunspellImpl::get_nosplitsugs() const
+{
+    if (pAMgr)
+        return static_cast<unsigned>(pAMgr->get_nosplitsugs());
+
+    return false;
+}
+
+bool HunspellImpl::get_compoundhyphensuggest() const
+{
+    return compoundhyphensuggest;
 }
 
 Hunspell::Hunspell(const char* affpath, const char* dpath, const char* key)
@@ -2485,6 +2591,82 @@ int Hunspell::input_conv(const char* word, char* dest, size_t destsize) {
 
 void Hunspell::set_trace_callback(HunspellTraceCallback callback, void* userdata) {
   m_Impl->set_trace_callback(callback, userdata);
+}
+
+void Hunspell::set_onlymaxdiff(const bool value)
+{
+    if (m_Impl)
+        m_Impl->set_onlymaxdiff(value);
+}
+
+void Hunspell::set_maxdiff(const unsigned value)
+{
+    if (m_Impl)
+        m_Impl->set_maxdiff(value);
+}
+
+void Hunspell::set_maxngramsugs(const unsigned value)
+{
+    if (m_Impl)
+        m_Impl->set_maxngramsugs(value);
+}
+
+void Hunspell::set_phone(const bool value)
+{
+    if (m_Impl)
+        m_Impl->set_phone(value);
+}
+
+void Hunspell::set_nosplitsugs(const bool value)
+{
+    if (m_Impl)
+        m_Impl->set_nosplitsugs(value);
+}
+
+void Hunspell::set_compoundhyphensuggest(const bool value)
+{
+    if (m_Impl)
+        m_Impl->set_compoundhyphensuggest(value);
+}
+
+bool Hunspell::get_onlymaxdiff() const
+{
+    if (m_Impl)
+        return m_Impl->get_onlymaxdiff();
+
+    return false;
+}
+
+unsigned Hunspell::get_maxdiff() const
+{
+    if (m_Impl)
+        return m_Impl->get_maxdiff();
+
+    return 5u;
+}
+
+unsigned Hunspell::get_maxngramsugs() const
+{
+    if (m_Impl)
+        return m_Impl->get_maxngramsugs();
+
+    return static_cast<unsigned>(MAXNGRAMSUGS);
+}
+
+bool Hunspell::get_nosplitsugs() const
+{
+    if (m_Impl)
+        return m_Impl->get_nosplitsugs();
+
+    return false;
+}
+
+bool Hunspell::get_compoundhyphensuggest() const
+{
+    if (m_Impl)
+        return m_Impl->get_compoundhyphensuggest();
+
+    return true;
 }
 
 Hunhandle* Hunspell_create(const char* affpath, const char* dpath) {

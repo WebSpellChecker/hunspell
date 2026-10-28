@@ -79,6 +79,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <mutex>
 
 #include "atypes.hxx"
 #include "baseaffix.hxx"
@@ -157,6 +158,7 @@ class AffixMgr {
   bool parseddefcpd;
   std::vector<flagentry> defcpdtable;
   phonetable* phone;
+  bool usephone;  // allow PHONE-based suggestions to be turned off at runtime
   int maxngramsugs;
   int maxcpdsugs;
   int maxdiff;
@@ -168,11 +170,9 @@ class AffixMgr {
   std::string cpdvowels; // vowels (for calculating of Hungarian compounding limit,
   std::vector<w_char> cpdvowels_utf16; //vowels for UTF-8 encoding
   std::string cpdsyllablenum; // syllable count incrementing flag
-  const char* pfxappnd;  // BUG: not stateless
   const char* sfxappnd;  // BUG: not stateless
   int sfxextra;          // BUG: not stateless
   FLAG sfxflag;          // BUG: not stateless
-  char* derived;         // BUG: not stateless
   SfxEntry* sfx;         // BUG: not stateless
   PfxEntry* pfx;         // BUG: not stateless
   int checknum;
@@ -193,6 +193,7 @@ class AffixMgr {
   FLAG substandard;
   int checksharps;
   int fullstrip;
+  std::recursive_mutex mutex;
 
   int havecontclass;           // boolean variable
   std::bitset<CONTSIZE> contclasses;  // flags of possible continuing classes (twofold
@@ -409,6 +410,12 @@ class AffixMgr {
   int get_checksharps() const;
   std::string encode_flag(unsigned short aflag) const;
   int get_fullstrip() const;
+  std::recursive_mutex& get_mutex();
+  void set_onlymaxdiff(bool value);
+  void set_maxdiff(unsigned value);
+  void set_maxngramsugs(unsigned value);
+  void set_phone(bool value);
+  void set_nosplitsugs(bool value);
 
  private:
   int parse_file(const char* affpath, const char* key);

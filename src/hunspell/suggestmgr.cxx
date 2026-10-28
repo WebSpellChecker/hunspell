@@ -81,6 +81,12 @@
 
 const w_char W_VLINE = {'\0', '|'};
 
+// Start of the running suggest() search, for its time limit. Upstream keeps it in
+// the SuggestMgr object, so threads that share one Hunspell object overwrote it for
+// each other, and spell() writes it too through suggest(test_simplesug). Keep one
+// per thread instead (WebSpellChecker change)
+static thread_local std::chrono::steady_clock::time_point suggest_start;
+
 #define MAX_CHAR_DISTANCE 4
 #define MAXWORDUTF8LEN (MAXWORDLEN * 3)
 
@@ -223,6 +229,11 @@ bool SuggestMgr::suggest(std::vector<std::string>& slst,
   // - not for testing compound words with 3 or more words (test_simplesug == false)
   int info = 0;
   for (int cpdsuggest = 0; cpdsuggest < 3 && nocompoundtwowords == 0; cpdsuggest++) {
+
+    // a time budget for each loop, as 1.7.2 had: with one budget for all three
+    // the first loop could spend it, and the search stopped before the loops and
+    // the ngram suggestions after it (WebSpellChecker change)
+    suggest_start = std::chrono::steady_clock::now();
 
     // limit compound suggestion
     if (cpdsuggest > 0)
@@ -1228,6 +1239,9 @@ void SuggestMgr::ngsuggest(std::vector<std::string>& wlst,
   // characters
   const struct cs_info* origconv = csconv;
   if (n == -1) {
+
+    throw std::logic_error{ "Couldn't find suggestion with ngsuggest." };
+
     utf8 = 0;  // XXX not state-free
     if (!csconv)
       csconv = get_current_cs("iso88591"); // XXX not state-free
@@ -1681,8 +1695,10 @@ void SuggestMgr::ngsuggest(std::vector<std::string>& wlst,
           // don't suggest previous suggestions or a previous suggestion with
           // prefixes or affixes
           if ((!guessorig[i] && strstr(guess[i], j.c_str())) || (guessorig[i] && strstr(guessorig[i], j.c_str())) ||
-              // check forbidden words
-              !checkword(guess[i], 0, nullptr, nullptr)) {
+              // check forbidden words, without the time limit: the guesses
+              // are found, and under the limit all of them were dropped once
+              // the time was up (WebSpellChecker change)
+              !checkword(guess[i], 0, nullptr, nullptr, /*time_limited=*/false)) {
             unique = 0;
             break;
           }
@@ -1713,8 +1729,9 @@ void SuggestMgr::ngsuggest(std::vector<std::string>& wlst,
             // don't suggest previous suggestions or a previous suggestion with
             // prefixes or affixes
             if (strstr(i, j.c_str()) ||
-                // check forbidden words
-                !checkword(i, 0, nullptr, nullptr)) {
+                // check forbidden words, without the time limit as above
+                // (WebSpellChecker change)
+                !checkword(i, 0, nullptr, nullptr, /*time_limited=*/false)) {
               unique = 0;
               break;
             }
@@ -1736,9 +1753,12 @@ void SuggestMgr::ngsuggest(std::vector<std::string>& wlst,
 int SuggestMgr::checkword(const std::string& word,
                           int cpdsuggest,
                           int* timer,
-                          std::chrono::steady_clock::time_point* timelimit) {
-  // check overall suggestion time limit
-  if (std::chrono::steady_clock::now() - suggest_start > TIMELIMIT_SUGGESTION_MS)
+                          std::chrono::steady_clock::time_point* timelimit,
+                          bool time_limited) {
+  // check overall suggestion time limit, unless the caller checks a suggestion
+  // already found: then a word is not rejected only because the time is up
+  // (WebSpellChecker change)
+  if (time_limited && std::chrono::steady_clock::now() - suggest_start > TIMELIMIT_SUGGESTION_MS)
     return 0;
 
   // check time limit
@@ -1752,6 +1772,10 @@ int SuggestMgr::checkword(const std::string& word,
   }
 
   if (pAMgr) {
+
+    auto& mutex = pAMgr->get_mutex();
+    std::scoped_lock lock(mutex);
+
     struct hentry* rv = nullptr;
     int nosuffix = 0;
     size_t len = word.size();
@@ -1832,6 +1856,10 @@ int SuggestMgr::checkword(const std::string& word,
 
 int SuggestMgr::check_forbidden(const std::string& word) {
   if (pAMgr) {
+
+    auto& mutex = pAMgr->get_mutex();
+    std::scoped_lock lock(mutex);
+
     struct hentry* rv = pAMgr->lookup(word.c_str(), word.size());
     if (rv && rv->astr &&
         (TESTAFF(rv->astr, pAMgr->get_needaffix(), rv->alen) ||
@@ -1884,6 +1912,9 @@ std::string SuggestMgr::suggest_morph(const std::string& in_w) {
     rv = rv->next_homonym;
   }
 
+  auto& mutex = pAMgr->get_mutex();
+  std::scoped_lock lock(mutex);
+
   AffixScratch scratch;
   std::string st = pAMgr->affix_check_morph(w, 0, w.size(), scratch);
   if (!st.empty()) {
@@ -1929,6 +1960,13 @@ std::string SuggestMgr::suggest_hentry_gen(hentry* rv, const char* pattern) {
 
   if (get_sfxcount(HENTRY_DATA(rv)) > sfxcount)
     return result;
+
+  if (!pAMgr)
+      return std::string();
+
+  auto& mutex = pAMgr->get_mutex();
+  std::scoped_lock lock(mutex);
+
 
   if (HENTRY_DATA(rv)) {
     std::string aff = pAMgr->morphgen(HENTRY_WORD(rv), rv->blen, rv->astr, rv->alen,
@@ -2047,6 +2085,16 @@ std::string SuggestMgr::suggest_gen(const std::vector<std::string>& desc, const 
     pattern = newpattern.c_str();
   }
   return result2;
+}
+
+void SuggestMgr::set_maxngramsugs(const unsigned value)
+{
+    maxngramsugs = static_cast<int>(value);
+}
+
+void SuggestMgr::set_nosplitsugs(const bool value)
+{
+    nosplitsugs = static_cast<int>(value);
 }
 
 // generate an n-gram score comparing s1 and s2, UTF16 version

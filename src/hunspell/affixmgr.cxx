@@ -150,6 +150,7 @@ AffixMgr::AffixMgr(const char* affpath,
   parsedcheckcpd = false;
   parseddefcpd = false;
   phone = nullptr;
+  usephone = true;
   compoundflag = FLAG_NULL;        // permits word in compound forms
   compoundbegin = FLAG_NULL;       // may be first word in compound forms
   compoundmiddle = FLAG_NULL;      // may be middle word in compound forms
@@ -174,7 +175,6 @@ AffixMgr::AffixMgr(const char* affpath,
   cpdwordmax = -1;        // default: unlimited wordcount in compound words
   cpdmin = -1;            // undefined
   cpdmaxsyllable = 0;     // default: unlimited syllablecount in compound words
-  pfxappnd = nullptr;     // previous prefix for counting syllables of the prefix BUG
   sfxappnd = nullptr;     // previous suffix for counting syllables of the suffix BUG
   sfxextra = 0;     // modifier for syllable count of sfxappnd BUG
   checknum = 0;               // checking numbers, and word with numbers
@@ -309,6 +309,20 @@ void AffixMgr::finishFileMgr(FileMgr* afflst) {
 
 // read in aff file and build up prefix and suffix entry objects
 int AffixMgr::parse_file(const char* affpath, const char* key) {
+
+    if (std::string(affpath) == "")
+    {
+        encoding = SPELL_ENCODING;
+
+        if (encoding == "UTF-8") {
+            utf8 = 1;
+        }
+
+        process_pfx_order();
+        process_sfx_order();
+
+        return 0;
+    }
 
   // checking flag duplication
   char dupflags[CONTSIZE];
@@ -1139,7 +1153,6 @@ struct hentry* AffixMgr::prefix_check(const std::string& word,
   struct hentry* rv = nullptr;
 
   pfx = nullptr;
-  pfxappnd = nullptr;
   sfxappnd = nullptr;
   sfxextra = 0;
 
@@ -3801,7 +3814,7 @@ RepList* AffixMgr::get_oconvtable() const {
 
 // return replacing table
 struct phonetable* AffixMgr::get_phonetable() const {
-  if (!phone)
+  if (!phone || !usephone)
     return nullptr;
   return phone;
 }
@@ -3836,6 +3849,35 @@ int AffixMgr::get_complexprefixes() const {
 // return FULLSTRIP option
 int AffixMgr::get_fullstrip() const {
   return fullstrip;
+}
+
+std::recursive_mutex& AffixMgr::get_mutex() {
+    return mutex;
+}
+
+void AffixMgr::set_onlymaxdiff(const bool value)
+{
+    onlymaxdiff = static_cast<int>(value);
+}
+
+void AffixMgr::set_maxdiff(const unsigned value)
+{
+    maxdiff = static_cast<int>(value);
+}
+
+void AffixMgr::set_maxngramsugs(const unsigned value)
+{
+    maxngramsugs = static_cast<int>(value);
+}
+
+void AffixMgr::set_phone(const bool value)
+{
+    usephone = value;
+}
+
+void AffixMgr::set_nosplitsugs(const bool value)
+{
+    nosplitsugs = static_cast<int>(value);
 }
 
 FLAG AffixMgr::get_keepcase() const {
