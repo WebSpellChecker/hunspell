@@ -3,9 +3,11 @@
 This document records WebSpellChecker-specific changes on top of upstream Hunspell.
 
 ### Upstream base
-- Each upstream release gets its own branch, `multithreaded_<version>`, made from the upstream release tag with these changes on top as separate commits. The current one is `multithreaded_1.7.6`. `multithreaded_1.7.2` stays for older releases.
-- `master` points to the branch of the latest release, so `git log v1.7.6..master` lists these changes. A release gets a tag such as `v1.7.6-wsc.1`.
-- To update to a new upstream release, make `multithreaded_<version>` from its tag and move the changes onto it one by one with `git cherry-pick` (or `git rebase --onto v1.7.7 v1.7.6`). Review it in a pull request against a branch at the upstream tag, then move `master` to it with a push, not with a merge button, so the commits keep their hashes. Other projects pin these commits by hash, so a released commit must stay reachable through its branch or tag.
+- Each upstream release gets its own branch, `multithreaded_<version>`, which starts at the upstream release tag. The current one is `multithreaded_1.7.6`. `multithreaded_1.7.2` stays for older releases.
+- Changes come into it through pull requests from feature branches, merged with "Create a merge commit", so each change stays a separate commit with its hash. Do not use "Squash and merge" or "Rebase and merge".
+- `git log v1.7.6..multithreaded_1.7.6` lists these changes. A release gets a tag such as `v1.7.6-wsc.1`.
+- To update to a new upstream release, make `multithreaded_<version>` from its tag, make a feature branch from it, move the changes onto the feature branch one by one with `git cherry-pick` (or `git rebase --onto v1.7.7 v1.7.6`) and open a pull request into `multithreaded_<version>`. Other projects pin these commits by hash, so a released commit must stay reachable through its branch or tag.
+- `master` is not used for releases.
 - Do not use GitHub's "Sync fork": it merges upstream `master`, which is not a release.
 
 ### Configuration
