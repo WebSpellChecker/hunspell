@@ -24,6 +24,9 @@ This document records WebSpellChecker-specific changes on top of upstream Hunspe
 - UTF-8 is the default encoding when the .aff file has no SET line.
 - A Hunspell object can be created with empty .aff and .dic paths, for word lists added with `add()`. The empty .dic path is not reported as a load error.
 
+### Compounds
+- Revert upstream commit a54018e, which lets a compound with SIMPLIFIEDTRIPLE end in a part one letter shorter than COMPOUNDMIN on the surface. With the default COMPOUNDMIN of 3, nb_NO accepted every word that ends in a double consonant plus 2 letters when the consonant and those letters form a 3-letter compound word, for example `nettil` (nett + til) and `klikkor` (klikk + kor). No .aff setting turns this off without also rejecting correct compounds.
+
 ### Suggestions
 - Check found suggestions of capitalized words against KEEPCASE and FORBIDDENWORD without the global time limit, as 1.7.2 did. Since 1.7.3 the check runs under the limit, and once the time is up it drops every suggestion, so long compound words got none.
 - Check the ngram suggestions against forbidden words without the time limit, for the same reason: since 1.7.3 the check dropped every ngram suggestion once the time was up.
